@@ -1,1 +1,86 @@
+javascript:(function(){
+  if(window.__hello_widget) return;
+  window.__hello_widget = true;
+  const css = `
+    #hello-widget{position:fixed;right:18px;top:18px;z-index:2147483647;
+      width:160px;background:#111;color:#fff;border:1px solid #444;border-radius:8px;
+      box-shadow:0 8px 24px rgba(0,0,0,.6);font-family:system-ui,Segoe UI,Roboto,Arial,sans-serif;
+      user-select:none;}
+    #hello-header{padding:8px 10px;cursor:move;background:rgba(255,255,255,0.03);border-bottom:1px solid rgba(255,255,255,0.02);border-radius:8px 8px 0 0;display:flex;align-items:center;justify-content:space-between}
+    #hello-body{padding:12px;font-size:14px;text-align:center}
+    #hello-close{background:transparent;border:none;color:#bbb;font-weight:700;cursor:pointer;padding:2px 6px;border-radius:6px}
+    #hello-close:hover{color:#fff;background:rgba(255,255,255,0.04)}
+  `;
+  const style=document.createElement('style');
+  style.id='hello-widget-style';
+  style.appendChild(document.createTextNode(css));
+  document.head.appendChild(style);
 
+  const win=document.createElement('div');
+  win.id='hello-widget';
+  win.innerHTML = '<div id="hello-header"><span style="font-size:13px">Hello</span><button id="hello-close" title="Close">×</button></div><div id="hello-body">Hello 👋</div>';
+  document.body.appendChild(win);
+
+  document.getElementById('hello-close').addEventListener('click',function(){
+    document.getElementById('hello-widget')?.remove();
+    document.getElementById('hello-widget-style')?.remove();
+    delete window.__hello_widget;
+  });
+
+  // Drag support
+  const header = document.getElementById('hello-header');
+  let isDown = false, startX=0, startY=0, startLeft=0, startTop=0;
+  header.addEventListener('mousedown', function(e){
+    isDown = true;
+    startX = e.clientX;
+    startY = e.clientY;
+    const rect = win.getBoundingClientRect();
+    startLeft = rect.left;
+    startTop = rect.top;
+    header.style.cursor = 'grabbing';
+    e.preventDefault();
+  });
+  document.addEventListener('mousemove', function(e){
+    if(!isDown) return;
+    let dx = e.clientX - startX;
+    let dy = e.clientY - startY;
+    let left = startLeft + dx;
+    let top = startTop + dy;
+    // keep inside viewport
+    left = Math.max(8, Math.min(window.innerWidth - win.offsetWidth - 8, left));
+    top = Math.max(8, Math.min(window.innerHeight - win.offsetHeight - 8, top));
+    win.style.left = left + 'px';
+    win.style.top = top + 'px';
+    win.style.right = 'auto';
+    win.style.bottom = 'auto';
+    win.style.position = 'fixed';
+  });
+  document.addEventListener('mouseup', function(){ if(isDown){ isDown=false; header.style.cursor='move'; } });
+
+  // Touch support
+  header.addEventListener('touchstart', function(e){
+    isDown = true;
+    const t = e.touches[0];
+    startX = t.clientX; startY = t.clientY;
+    const rect = win.getBoundingClientRect();
+    startLeft = rect.left; startTop = rect.top;
+    e.preventDefault();
+  }, {passive:false});
+  document.addEventListener('touchmove', function(e){
+    if(!isDown) return;
+    const t = e.touches[0];
+    let dx = t.clientX - startX;
+    let dy = t.clientY - startY;
+    let left = startLeft + dx;
+    let top = startTop + dy;
+    left = Math.max(8, Math.min(window.innerWidth - win.offsetWidth - 8, left));
+    top = Math.max(8, Math.min(window.innerHeight - win.offsetHeight - 8, top));
+    win.style.left = left + 'px';
+    win.style.top = top + 'px';
+    win.style.right = 'auto';
+    win.style.bottom = 'auto';
+    win.style.position = 'fixed';
+    e.preventDefault();
+  }, {passive:false});
+  document.addEventListener('touchend', function(){ if(isDown) isDown=false; });
+})();
